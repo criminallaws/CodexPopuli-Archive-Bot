@@ -1,0 +1,16 @@
+name: 自动网页快照存档
+
+on:
+  schedule:
+    # 每天北京时间上午 8:00 运行 (UTC 0:00)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # 允许你手动点击按钮即时运行
+
+jobs:
+  save_to_wayback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 请求 Wayback Machine 存档首页
+        run: |
+          curl -X POST https://web.archive.org/save/https://chinacriminallaw.miraheze.org
+      
