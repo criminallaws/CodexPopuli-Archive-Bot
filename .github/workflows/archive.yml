@@ -10,7 +10,8 @@ jobs:
   save_to_wayback:
     runs-on: ubuntu-latest
     steps:
-      - name: 请求 Wayback Machine 存档首页
+      - name: 请求 Wayback Machine 存档
         run: |
-          curl -X POST https://web.archive.org/save/https://chinacriminallaw.miraheze.org
+          curl -s -I "https://web.archive.org/save/https://chinacriminallaw.miraheze.org"
+        
       
