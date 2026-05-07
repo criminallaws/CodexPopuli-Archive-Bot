@@ -1,9 +1,9 @@
-name: 法律条文强制定期存档
+name: 法律条文定期存档
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 每天北京时间上午8点
-  workflow_dispatch: 
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   backup:
@@ -12,28 +12,28 @@ jobs:
       contents: write
       
     steps:
-      - name: 检出仓库代码
-        uses: actions/checkout@v4
-
+      # 不再使用 actions/checkout@v4，直接用 Shell 抓取代码
+      - name: 原生克隆仓库
+        run: |
+          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git .
+          
       - name: 1. 向 Wayback Machine 发送快照请求
         run: |
-          curl -s -I "https://web.archive.org/save/https://chinacriminallaw.miraheze.org/wiki/众筑刑法"
+          curl -s -I "https://web.archive.org/save/https://chinacriminallaw.miraheze.org/wiki/%E4%BC%97%E7%AD%91%E5%88%91%E6%B3%95"
 
       - name: 2. 抓取 Wiki 源码并按日期命名
         run: |
           mkdir -p backups
-          # 获取当前日期，例如 2024-05-07
-          FILENAME="backups/众筑刑法_$(date +'%Y-%m-%d').md"
-          # 抓取纯文本源码并保存为独立日期文件
-          curl -L "https://chinacriminallaw.miraheze.org/wiki/众筑刑法?action=raw" -o "$FILENAME"
-          # 同时更新一个“最新版”文件，方便快速查看
+          DATE_STR=$(date +'%Y-%m-%d')
+          FILENAME="backups/众筑刑法_${DATE_STR}.md"
+          curl -L "https://chinacriminallaw.miraheze.org/wiki/%E4%BC%97%E7%AD%91%E5%88%91%E6%B3%95?action=raw" -o "$FILENAME"
           cp "$FILENAME" backups/众筑刑法_Latest.md
 
-      - name: 3. 强制提交并推送
+      - name: 3. 原生 Git 提交推送
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
           git add backups/
-          # 只要有新日期文件产生，git add 就会识别到，这里直接 commit
-          git commit -m "定期强制存档：$(date +'%Y-%m-%d %H:%M')"
-          git push
+          # 强制提交，即使没有变化（通过 commit 信息的时间戳差异）
+          git commit -m "永久存档记录：$(date +'%Y-%m-%d %H:%M:%S')"
+          git push origin main
