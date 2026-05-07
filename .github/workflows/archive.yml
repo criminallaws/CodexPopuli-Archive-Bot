@@ -1,17 +1,39 @@
-name: 自动网页快照存档
+name: 法律条文强制定期存档
 
 on:
   schedule:
-    # 每天北京时间上午 8:00 运行 (UTC 0:00)
-    - cron: '0 0 * * *'
-  workflow_dispatch: # 允许你手动点击按钮即时运行
+    - cron: '0 0 * * *' # 每天北京时间上午8点
+  workflow_dispatch: 
 
 jobs:
-  save_to_wayback:
+  backup:
     runs-on: ubuntu-latest
-    steps:
-      - name: 请求 Wayback Machine 存档
-        run: |
-          curl -s -I "https://web.archive.org/save/https://chinacriminallaw.miraheze.org"
-        
+    permissions:
+      contents: write
       
+    steps:
+      - name: 检出仓库代码
+        uses: actions/checkout@v4
+
+      - name: 1. 向 Wayback Machine 发送快照请求
+        run: |
+          curl -s -I "https://web.archive.org/save/https://chinacriminallaw.miraheze.org/wiki/众筑刑法"
+
+      - name: 2. 抓取 Wiki 源码并按日期命名
+        run: |
+          mkdir -p backups
+          # 获取当前日期，例如 2024-05-07
+          FILENAME="backups/众筑刑法_$(date +'%Y-%m-%d').md"
+          # 抓取纯文本源码并保存为独立日期文件
+          curl -L "https://chinacriminallaw.miraheze.org/wiki/众筑刑法?action=raw" -o "$FILENAME"
+          # 同时更新一个“最新版”文件，方便快速查看
+          cp "$FILENAME" backups/众筑刑法_Latest.md
+
+      - name: 3. 强制提交并推送
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add backups/
+          # 只要有新日期文件产生，git add 就会识别到，这里直接 commit
+          git commit -m "定期强制存档：$(date +'%Y-%m-%d %H:%M')"
+          git push
