@@ -34,6 +34,10 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add backups/
-          # 强制提交，即使没有变化（通过 commit 信息的时间戳差异）
-          git commit -m "永久存档记录：$(date +'%Y-%m-%d %H:%M:%S')"
+          
+          # 核心修正：使用 --allow-empty 
+          # 这样即便没有任何文件变化，也会强行生成一个提交记录，证明“今天也来查过了”
+          git commit --allow-empty -m "永久存档记录：$(date +'%Y-%m-%d %H:%M:%S')"
+          
+          # 推送时确保目标是 origin main
           git push origin main
