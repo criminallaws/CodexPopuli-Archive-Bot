@@ -41,3 +41,17 @@ jobs:
           
           # 推送时确保目标是 origin main
           git push origin main
+
+      - name: 4. 上传至 IPFS (分布式存储)
+        id: ipfs
+        uses: aquiladev/ipfs-action@v0.3.1
+        with:
+          path: backups/众筑刑法_${{ env.DATE_STR }}.md
+          service: pinata
+          pinataJwt: ${{ secrets.PINATA_JWT }}
+          pinataPinName: "众筑刑法备份_${{ env.DATE_STR }}"
+
+      - name: 打印 IPFS 地址
+        run: |
+          echo "文件已上链！CID 为: ${{ steps.ipfs.outputs.cid }}"
+          echo "你可以通过以下网关查看: https://ipfs.io/ipfs/${{ steps.ipfs.outputs.cid }}"
